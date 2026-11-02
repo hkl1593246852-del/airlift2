@@ -1,0 +1,8 @@
+build/
+*.ipa
+*.app/
+.DS_Store
+xcuserdata/
+*.xcuserstate
+.env
+*.token
