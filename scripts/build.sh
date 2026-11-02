@@ -18,7 +18,7 @@ xcrun --sdk iphoneos clang \
   -mios-version-min=15.0 \
   -isysroot "$SDK" \
   -fobjc-arc -O2 -Wall \
-  -framework UIKit -framework Foundation \
+  -framework UIKit -framework Foundation -framework CoreGraphics \
   "$ROOT/Sources/main.m" \
   -o "$APP/$APP_NAME"
 
