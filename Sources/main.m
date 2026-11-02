@@ -150,7 +150,7 @@ static void runChecks(void) {
     @autoreleasepool {
         setupOnce();
         UIDevice *dev = [UIDevice currentDevice];
-        L(@"=== sandbox_extension TOCTOU ===");
+        L(@"=== sandbox_extension TOCTOU (build v3) ===");
         L(@"%@ / iOS %@ / uid=%d", dev.model, dev.systemVersion, getuid());
         resolveSymbols();
         if (!p_issue || !p_consume) {
@@ -221,6 +221,16 @@ static void runChecks(void) {
 
 @implementation AppDelegate
 
+- (void)startRun {
+    dispatch_async(dispatch_get_global_queue(QOS_CLASS_USER_INITIATED, 0), ^{
+        @try {
+            runChecks();
+        } @catch (NSException *e) {
+            L(@"EXCEPTION: %@ - %@", e.name, e.reason);
+        }
+    });
+}
+
 - (BOOL)application:(UIApplication *)app didFinishLaunchingWithOptions:(NSDictionary *)opts {
     setupOnce();
     self.window = [[UIWindow alloc] initWithFrame:[UIScreen mainScreen].bounds];
@@ -233,8 +243,10 @@ static void runChecks(void) {
     self.tv.backgroundColor = [UIColor blackColor];
     self.tv.font = [UIFont monospacedSystemFontOfSize:10 weight:UIFontWeightRegular];
     self.tv.translatesAutoresizingMaskIntoConstraints = NO;
-    self.tv.text = @"booting...\n";
+    self.tv.text = @"airlift2 v3\nbooting...\n";
     gTV = self.tv;
+    [@"launch" writeToFile:gLogPath atomically:YES
+                  encoding:NSUTF8StringEncoding error:nil];
 
     UIButton *btn = [UIButton buttonWithType:UIButtonTypeSystem];
     [btn setTitle:@"RUN" forState:UIControlStateNormal];
@@ -267,14 +279,14 @@ static void runChecks(void) {
     self.window.rootViewController = vc;
     [self.window makeKeyAndVisible];
 
-    dispatch_async(dispatch_get_global_queue(QOS_CLASS_USER_INITIATED, 0), ^{ runChecks(); });
+    [self startRun];
     return YES;
 }
 
 - (void)run {
     [gLog setString:@""];
     flushTV();
-    dispatch_async(dispatch_get_global_queue(QOS_CLASS_USER_INITIATED, 0), ^{ runChecks(); });
+    [self startRun];
 }
 
 - (void)copyLog {
